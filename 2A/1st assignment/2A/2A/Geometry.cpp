@@ -1,604 +1,526 @@
+#include <math.h>
+#include <map>
+
 #include "Geometry.h"
-using namespace std;
+// #include "geometry.cpp"
+
+/*
+	If there is any linker error at all, please uncomment the include directive for geometry.cpp.
+	I know it's a bad practice to do so, but a quick workaround
+*/
+
+
+// ============ Utility functions =================
+
+inline void swap(float& a, float& b) { // Inline function to swap two float values
+    float t { a };
+    a = b;
+    b = t;
+}
+
 
 // ============ Shape class =================
 
-Shape::Shape() {depth = 0;} // REMOVE ME
-
 Shape::Shape(int d) {
-	if (d < 0)
-		cout << "wrong";//throw invalid_argument("depth cannot be less than zero");
-	else
-		depth = d;
-	// IMPLEMENT ME
+    if (d < 0)
+        throw std::invalid_argument("Negative depth!");
+    
+    objectDepth = d;
 }
 
 bool Shape::setDepth(int d) {
-	// IMPLEMENT ME
-//	return false; // dummy
-	if (d < 0)
-	{
-		//throw invalid_argument("depth cannot be less than zero");
-		return false;
-	}
-	else
-		depth = d;
-	return true;
+    if (d < 0)
+        return false;
+    
+    objectDepth = d;
+    return true;
 }
 
-int Shape::getDepth()const {
-//	 IMPLEMENT ME
-//	return -999; // dummy
-	return depth;
+int Shape::getDepth() const {
+    return objectDepth;
 }
-//int Shape::dim()const{return 999;}
-//int Shape::dim()const{};//{}// {
-//	// IMPLEMENT ME
-//	return -999; // dummy
-//}
 
-//void Shape::translate(float x, float y) {
-//	// IMPLEMENT ME
-//	cout << "I'm in shape" << endl;
-//}
-
-//void Shape::rotate() {
-//	// IMPLEMENT ME
-//}
-//
-//void Shape::scale(float f) {
-//	// IMPLEMENT ME
-//}
-
-//bool Shape::contains(const Point& p);
-//const {
-//	// IMPLEMENT ME
-//	return false; // dummy
-//}
 
 // =============== Point class ================
-Point::Point(){
-	x=0;
-	y=0;
-	depth=0;
-}
-Point::Point(float x, float y) {
-	this->x = x;
-	this->y = y;
-	depth = 0;
-}
-Point::Point(float x, float y, int d) {
-	// IMPLEMENT ME
-	if (d<0)
-		throw invalid_argument("invalid depth");
-	this->x = x;
-	this->y = y;
-	depth = d;
+
+Point::Point(float x, float y, int d) : Shape(d) {  // Call Shape parameterized ctor to set depth
+    // Assignment of x and y coordinates
+    this->x = x;
+    this->y = y;
 }
 
 float Point::getX() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	return this->x;
+    return x;
 }
 
 float Point::getY() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	return this->y;
-}
-int Point::dim() const{
-	return 0;
-}
-void Point::translate(float x, float y)
-{
-	this->x += x;
-	this->y += y;
-//	cout << "x : " << this->x << "y: " << this->y;
-}
-void Point::rotate(){}
-void Point::scale(float f){
-	if (f<=0)
-		throw invalid_argument("invalid factor");
-}
-bool Point::contains(const Point&p){
-	if (p.x == x && p.y == y)
-		return true;
-	return false;
+    return y;
 }
 
-	bool Point::setDepth(int d) {
-		if (d < 0)
-		{
-			return false;
-//			throw"invalid argument";
-		}
-		else
-			depth = d;
-		return true;
-	}
+int Point::dim() const {
+    // A point is 0 dimensioned
+    return 0;
+}
 
-	int Point::getDepth(){
-		return depth;
-	}
-//	int Point::dim(){return 0;}
+void Point::translate(float x, float y) {
+    // Increment/Decrement point's coordinate by x and y
+    this->x += x;
+    this->y += y;
+}
+
+void Point::rotate() {} // Rotation of a point has no effect
+
+void Point::scale(float f) {
+    if (f <= 0)
+        throw std::invalid_argument("Negative scale factor"); 
+    // Scaling of a point has no effect
+}
+
+bool Point::contains(const Point& p) const {
+    // Contains only if both coordinates are equal
+    return (p.getX() == x && p.getY() == y);
+}
+
+
 // =========== LineSegment class ==============
 
-LineSegment::LineSegment(const Point& p, const Point& q) {
-	// IMPLEMENT ME
-	if (p.x != q.x && p.y != q.y)
-		throw invalid_argument("Line segment is not axis aligned");
-	if (p.depth != q.depth)
-		throw invalid_argument("Depths of both points are not the same");
-	this->depth = p.depth;// = q.depth;
-	if (p.x == q.x && p.y == q.y)	// both points are on same point
-		throw invalid_argument("Both points are on same point. Line segment cannot be formed.");
-	if (p.x == q.x || p.y == q.y) {	// axis aligned check
-		start = p;
-		end = q;
-	}
-	//		if (p.y==q.y && p.x == q.x) // both points are on same point
+LineSegment::LineSegment(const Point& p, const Point& q) : Shape(0) { // Call Shape() ctor to set depth temporarily as 0
+    // Exceptions
+    if (p.getDepth() != q.getDepth())
+        throw std::invalid_argument("Points depth mismatch");
+    else if (p.getX() != q.getX() && p.getY() != q.getY())
+        throw std::invalid_argument("Line is not axis-aligned");
+    else if (p.getX() == q.getX() && p.getY() == q.getY())
+        throw std::invalid_argument("Points conincide");
+
+    // Set depth as the points are valid
+    setDepth(p.getDepth());
+
+    if (p.getX() == q.getX()) { // Line parallel to Y-axis
+        x1 = x2 = p.getX();
+        
+        y1 = std::min(p.getY(), q.getY());
+        y2 = std::max(p.getY(), q.getY());
+    }
+    else {                      // Line parallel to X-axis
+        y1 = y2 = p.getY();
+        
+        x1 = std::min(p.getX(), q.getX());
+        x2 = std::max(p.getX(), q.getX());
+    }
 }
-int LineSegment::dim()const{return 1;}
 
 float LineSegment::getXmin() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	return start.x;
+    return x1;
 }
 
 float LineSegment::getXmax() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	return end.x;
+    return x2;
 }
 
 float LineSegment::getYmin() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	if (start.y < end.y) return start.y;
-
-	return end.y;
+    return y1;
 }
 
 float LineSegment::getYmax() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	if (end.y > start.y) return end.y;
-
-	return start.y;
+    return y2;
 }
 
 float LineSegment::length() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	float len;
-	if (start.x == end.x)	// line is vertical
-		len = start.y - end.y;
-	else if (start.y == end.y)	// line is horizontal
-		len = start.x - end.x;
-
-	if (len < 0)
-		len *= -1;
-
-	return len;
-}
-//void LineSegment::translate(float x, float y){
-//	start.translate(x, y);
-//	end.translate(x, y);
-//}
-void LineSegment::rotate(){
-		float diff;
-		Point center;
-		center.x = end.x + start.x;
-		center.x /= 2;
-
-		center.y = end.y + start.y;
-		center.y /= 2;
-		//center.display();
-
-		if (start.x == end.x) {	// parallel to x axis
-			diff = center.y-start.y;
-			start.x = start.x - diff;
-			end.x = end.x + diff;
-			//			end.x *= -1;
-
-			start.y = center.y;
-			end.y = center.y;
-		}
-		else if (start.y == end.y) {	// parallel to y axis
-			diff = center.x-start.x;
-			start.y = start.y - diff;
-			end.y = end.y + diff;
-			//			end.y *= -1;
-
-			start.x = center.x;
-			end.x = center.x;
-		}
-}
-bool LineSegment::contains(const Point& p){
-		float greaterX, smallerX, greaterY, smallerY;
-		if (start.x > end.x){
-			greaterX = start.x;
-			smallerX = end.x;
-		}
-		else{
-			greaterX = end.x;
-			smallerX = start.x;
-		}
-		if (start.y > end.y){
-			greaterY = start.y;
-			smallerY = end.y;
-		}
-		else{
-			greaterY = end.y;
-			smallerY = start.y;
-		}
-
-		if (p.y == start.y)
-		{
-			if (p.x >= smallerX && p.x <= greaterX)
-				return true;
-		}
-		else if (p.x == start.x) {
-			if (p.y >= smallerY && p.y <=greaterY)
-				return true;
-		}
-		return false;
-}
-void LineSegment::scale(float f){
-//	cout << start.x  << ',' << end.x << '\n';
-//	cout << start.y << ',' << end.y << endl;
-		if (f<=0) {
-			throw invalid_argument("Invalid factor");
-		}
-		Point center;
-		center.x = end.x + start.x;
-		center.x /= 2;
-
-		center.y = end.y + start.y;
-		center.y/=2;
-		if (f<1) {
-			int len;
-			if (end.x > start.x)
-				len = end.x - start.x;
-			else
-				len = start.x - end.x;
-
-			len *= f;
-			if (start.y==end.y) {
-				start.x = center.x-len/2;
-				end.x = center.x+len/2;
-			}
-			else if (start.x==end.x) {
-				start.y = center.y-len/2;
-				end.y = center.y+len/2;
-			}
-		}
-		else {
-	//		center.display();
-			if (start.y == end.y) {
-				int diff;
-				diff = center.x - start.x;
-				start.x = end.x = 0;
-
-				start.x -= center.x * f - diff;
-				end.x += center.x * f+diff;
-			}
-			else if (start.x == end.x)
-			{
-				int len, diff;
-//				diff = center.y - start.y;
-				len = end.y - start.y;
-				start.y = end.y = 0;
-				len*=f;
-				len/=2;
-				start.y -= len-center.y;
-				end.y += len+center.y;
-			}
-	//			start.x = (start.x - end.x )/ f;
-		}
-//		cout << start.x  << ',' << end.x << '\n';
-//		cout << start.y << ',' << end.y << endl;
+    // Distance formula
+    return sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2));
 }
 
-//int LineSegment::getDepth() {
-//	return depth;
-//}
+int LineSegment::dim() const {
+    // A line segment is 1 dimensional
+    return 1;
+}
+
+void LineSegment::translate(float x, float y) {
+    // Increment/Decrement both the point's coordinates by x and y
+    x1 += x; y1 += y;
+    x2 += x; y2 += y;
+}
+
+void LineSegment::rotate() {
+    // Store coordinates of the mid point of the line
+    float cX, cY;
+    // Store temporary coordinates
+    float tX, tY;
+    
+    // Swapping end-points as rotation will change orientation
+    if (x1 == x2) {
+        swap(x1, x2);
+        swap(y1, y2);
+    }
+    
+    // Calculate mid-point of the line segment
+    cX = (x1 + x2) / 2;
+    cY = (y1 + y2) / 2;
+
+    // Move the line to origin center
+    x1 -= cX; y1 -= cY;
+    x2 -= cX; y2 -= cY;
+
+    // Rotate x, y
+    tX = x1 ; tY = y1;
+    x1 =- tY; y1 = tX; 
+
+    tX = x2 ; tY = y2;
+    x2 =- tY; y2 = tX; 
+
+    // Revert back to original position
+    x1 += cX; y1 += cY;
+    x2 += cX; y2 += cY;
+}
+
+void LineSegment::scale(float f) {
+    float cX, cY;
+    
+    if (f <= 0)
+        throw std::invalid_argument("Negative scale factor");
+    
+    // Mid-point
+    cX = (x1 + x2) / 2;
+    cY = (y1 + y2) / 2;
+
+    // Move the line to origin center
+    x1 -= cX; y1 -= cY;
+    x2 -= cX; y2 -= cY;
+    
+    // Multiply coorindates with given scale factor, with origin as center of dilation
+    x1 *= f; y1 *= f;
+    x2 *= f; y2 *= f;
+    
+    // Shift back the figure to initial position
+    x1 += cX; y1 += cY;
+    x2 += cX; y2 += cY;
+}
+
+bool LineSegment::contains(const Point& p) const {
+    if (x1 == x2) // Line parallel to Y-axis
+        return (p.getX() == x1 && p.getY() >= std::min(y1, y2) && p.getY() <= std::max(y1, y2));
+    else          // Line parallel to X-axis
+        return (p.getY() == y1 && p.getX() >= std::min(x1, x2) && p.getX() <= std::max(x1, x2));
+}
+
 
 // ============ TwoDShape class ================
 
-TwoDShape::TwoDShape():Shape(){} // REMOVE ME
+TwoDShape::TwoDShape(int d) : Shape(d) {} // No additional functionality or operations to be performed
 
-TwoDShape::TwoDShape(int d) {
-	// IMPLEMENT ME
-	if (d < 0)
-		throw invalid_argument("depth cannot be less than zero");
-	else
-		this->depth = d;
+int TwoDShape::dim() const {
+    // All 2D Shapes are 2 dimensional
+    return 2;
 }
-
-//float TwoDShape::area() const
-//{
-	// IMPLEMENT ME
-//	return -999; // dummy
-//}
 
 // ============== Rectangle class ================
-Rectangle::Rectangle(){}
-Rectangle::Rectangle(const Point& p, const Point& q) {
-	// IMPLEMENT ME
-	if (p.x == q.x || p.y == q.y)
-		throw invalid_argument("Rectangle cannot be formed");
-	if (p.depth != q.depth)
-		throw invalid_argument("depth should be same");
-	p1 = p;
-	p2 = q;
-	depth = p.depth;
+
+Rectangle::Rectangle(const Point& p, const Point& q) : TwoDShape(0) {
+    // Exceptions
+    if (p.getDepth() != q.getDepth())
+        throw std::invalid_argument("Depth mismatch");
+    else if (p.getX() == q.getX() || p.getY() == q.getY())
+        throw std::invalid_argument("Lines coincide");
+    
+    // Set depth as points are valid
+    setDepth(p.getDepth());
+    
+    // Initialize coordinates of the rectangle
+    // 4 cases in which the given diagonally opposite points (P and Q) would be situated
+    
+    if (p.getX() < q.getX() && p.getY() < q.getY()) {       // Px < Qx, Py < Qy
+        x1 = p.getX(); y1 = p.getY();
+        x3 = q.getX(); y3 = q.getY();
+        
+        // Opposite points
+        x2 = q.getX(); y2 = p.getY();
+        x4 = p.getX(); y4 = q.getY();
+    }
+    else if (p.getX() < q.getX() && p.getY() > q.getY()) {  // Px < Qx, Py > Qy
+        x2 = q.getX(); y2 = q.getY();
+        x4 = p.getX(); y4 = p.getY();
+        
+        // Opposite points
+        x1 = p.getX(); y1 = q.getY();
+        x3 = q.getX(); y3 = p.getY();
+    }
+    else if (p.getX() > q.getX() && p.getY() > q.getY()) {  // Px > Qx, Py > Qy
+        x1 = q.getX(); y1 = q.getY();
+        x3 = p.getX(); y3 = p.getY();
+        
+        // Opposite points
+        x2 = p.getX(); y2 = q.getY();
+        x4 = q.getX(); y4 = p.getY();
+    }
+    else {                                                  // Px > Qx, Py < Qy
+        x2 = p.getX(); y2 = p.getY();
+        x4 = q.getX(); y4 = q.getY();
+        
+        // Opposite points
+        x1 = q.getX(); y1 = p.getY();
+        x3 = p.getX(); y3 = q.getY();
+    }
 }
 
-int Rectangle::dim()const{return 2;}
-
 float Rectangle::getXmin() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	if (p1.x < p2.x) return p1.x;
-
-	return p2.x;
+    return x1;
 }
 
 float Rectangle::getYmin() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	if (p1.y < p2.y) return p1.y;
-
-	return p2.y;
+    return y1;
 }
 
-//int Rectangle::getDepth() const {
-//	return this->depth;
-//}
-
 float Rectangle::getXmax() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	if (p1.x > p2.x) return p1.x;
-
-	return p2.x;
+    return x3;
 }
 
 float Rectangle::getYmax() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	if (p1.y > p2.y) return p1.y;
-
-	return p2.y;
-}
-//void Rectangle::translate(float x, float y){
-//	p1.translate(x, y);
-//	p2.translate(x, y);
-//}
-void Rectangle::rotate(){
-	Point center, s, e;
-	center.x = p1.x + p2.x;
-	center.x /= 2;
-	center.y = p1.y + p2.y;
-	center.y /= 2;
-
-	float x = p1.x - center.x;
-	float y = p1.y - center.y;
-
-	p1.x = center.x - y;
-	p1.y = center.y + x;
-
-	x = p2.x - center.x;
-	y = p2.y - center.y;
-
-	p2.x = center.x - y;
-	p2.y = center.y + x;
-}
-void Rectangle::scale(float f){
-		if (f <= 0) {
-			throw invalid_argument("Invalid factor");
-		}
-		Point center;
-		center.x = p1.x + p2.x;
-		center.x /= 2;
-		center.y = p1.y + p2.y;
-		center.y /= 2;
-
-
-			float diff1, diff2;
-			if (p1.x > p2.x)
-			{
-//				len = p1.x - p2.x;
-				diff1 = center.x - p2.x;
-			}
-			else
-			{
-//				len = p2.x - p1.x;
-				diff1 = center.x - p1.x;
-			}
-			if (p1.y > p2.y)
-			{
-//				width = p1.y - p2.y;
-				diff2 = center.y - p2.y;
-			}
-			else
-			{
-//				width = p2.y - p1.y;
-				diff2 = center.y - p1.y;
-			}
-			diff1*=f;
-			diff2*=f;
-			if (p1.x < p2.x)
-			{
-				p1.x = center.x-diff1;
-				p2.x = center.x+diff1;
-			}
-			else {
-				p2.x = center.x-diff1;
-				p1.x = center.x+diff1;
-			}
-			if (p1.y < p2.y)
-			{
-				p1.y = center.y-diff2;
-				p2.y = center.y+diff2;
-			}
-			else {
-				p2.y = center.y-diff2;
-				p1.y = center.y+diff2;
-			}
-}
-bool Rectangle::contains(const Point &p) {
-	int greaterX, smallerX, greaterY, smallerY;
-	if (p1.x > p2.x)
-		greaterX = p1.x, smallerX=p2.x;
-	else
-		greaterX = p2.x, smallerX=p1.x;
-	if (p1.y > p2.y)
-		greaterY = p1.y, smallerY = p2.y;
-	else
-		greaterY = p2.y, smallerY = p1.y;
-
-	if (p.x >= smallerX && p.x <= greaterX && p.y >= smallerY && p.y <=greaterY)
-		return true;
-
-	return false;
-}
-float Rectangle::area()const{
-	float len, width;
-	if (p1.x > p2.x)
-		len = p1.x - p2.x;
-	else
-		len = p2.x - p1.x;
-
-	if (len < 0)
-		len *= -1;
-	width = p1.y - p2.y;
-	if (width < 0)
-		width *= -1;
-
-	return len * width;
+    return y3;
 }
 
-int Rectangle::getDepth() const{
-	return depth;
+float Rectangle::area() const {
+    float length, breath;
+    
+    // Distance formula to find length and breath
+    length = sqrtf(powf(x2 - x1, 2) + powf(y2 - y1, 2));
+    breath = sqrtf(powf(x3 - x2, 2) + powf(y3 - y2, 2));
+    
+    // Area (Rectangle) = Length * Breath
+    return length * breath;
 }
+
+void Rectangle::translate(float x, float y) {
+    // Looping from (x1, y1) to (x4, y4) and appying translation accorindly
+    for (size_t i {0}; i < 4; i++) {
+        *xCoor[i] += x;
+        *yCoor[i] += y;
+    }
+}
+
+void Rectangle::rotate() {
+    float cX, cY, xTemp, yTemp;
+    
+    // Find min-point of the rectangle
+    cX = (x1 + x2) / 2;
+    cY = (y1 + y4) / 2;
+    
+    // Shift to origin
+    for (size_t i {0}; i < 4; i++) {
+        *xCoor[i] -= cX;
+        *yCoor[i] -= cY;
+    }
+
+    /* Using rotation matrix to obtain rotated coordinates
+    
+     * Rotation matrix:
+     * [ cos ϕ -sin ϕ ]
+     * [ sin ϕ  cos ϕ ]
+     * 
+     * Degree to radian = ϕ = 90 Degrees × Pi/180 => 1.5708
+     * 
+     * [ 0  1 ]
+     * [ -1 0 ]
+    */
+    
+    for (size_t i {0}; i < 4; i++) {
+        xTemp = *xCoor[i];
+        yTemp = *yCoor[i];
+        
+        // Multiplying (x, y) with rotation matrix and shifting back to original position
+        *xCoor[i] = (0 * xTemp) + (-1 * yTemp) + cX;
+        *yCoor[i] = (1 * xTemp) + (0  * yTemp) + cY;
+    }
+    
+    // Swap points as orientation changed
+    swap(x1, x4); swap(y1, y4);
+    swap(x2, x3); swap(y2, y3);
+    
+    // If lines parallel to x-axis are misaligned, swap to fix them
+    if (y1 != y2) {
+        swap(x2, x4);
+        swap(y2, y4);
+    }
+}
+
+
+void Rectangle::scale(float f) {
+    if (f <= 0)
+        throw std::invalid_argument("Negative scale factor");
+
+    float cX, cY;
+    
+    // Mid-point of the rectangle
+    cX = (x1 + x2) / 2;
+    cY = (y1 + y4) / 2;
+    
+    // Shift to origin
+    for (size_t i {0}; i < 4; i++) {
+        *xCoor[i] -= cX;
+        *yCoor[i] -= cY;
+    }
+    
+    // Multiply scale factor to all vertices
+    for (size_t i {0}; i < 4; i++) {
+        *xCoor[i] *= f;
+        *yCoor[i] *= f;
+    }
+    
+    // Shift back the object to it's initial position
+    for (size_t i {0}; i < 4; i++) {
+        *xCoor[i] += cX;
+        *yCoor[i] += cY;
+    }
+}
+
+bool Rectangle::contains(const Point& p) const {
+    // Check if the given point coordinate lie within the rectangle's extreme points A and C
+    return (p.getX() >= x1 && p.getX() <= x3 && p.getY() >= y1 && p.getY() <= y3);
+}
+
 
 // ================== Circle class ===================
 
-Circle::Circle(const Point& c, float r) {
-	// IMPLEMENT ME
-		center = c;
-		if (r == 0)
-			throw invalid_argument("Circle cannot be formed");
-		if (r < 0)
-			throw invalid_argument("Circle cannot be formed");			
-		radius = r;
-		depth = c.depth;
+Circle::Circle(const Point& c, float r) : TwoDShape(0) {
+    if (r <= 0)
+        throw std::invalid_argument("Invalid argument!");
+    
+    // Set depth as arguments are valid
+    setDepth(c.getDepth());
+    
+    // Initialize coordinates of the center of the circle
+    x = c.getX();
+    y = c.getY();
+    
+    // Initialize radius to r
+    radius = r;
 }
 
-int Circle::dim()const{return 2;}
-
 float Circle::getX() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	return center.x;
+    return x;
 }
 
 float Circle::getY() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	return center.y;
+    return y;
 }
 
 float Circle::getR() const {
-	// IMPLEMENT ME
-//	return -999; // dummy
-	return radius;
+    return radius;
 }
 
-//void Circle::translate(float x, float y){
-//	center.translate(x, y);
-//}
-void Circle::rotate(){}
-void Circle::scale(float f){
-	if (f <= 0) {
-		throw invalid_argument("Invalid factor");
-	}
-	else {
-		radius *= f;
-	}
-}
-bool Circle::contains(const Point&p){
-	float distance = sqrt(((p.x - center.x) * (p.x - center.x)) + ((p.y - center.y) * (p.y - center.y)));
-	if (distance <= radius)
-		return true;
 
-	return false;
-}
-float Circle::area()const{
-	return PI * radius * radius;
+float Circle::area() const {
+    // Area (Circle) = πr2
+    return PI * (radius * radius);
 }
 
-//int Circle::getDepth(){
-//	return depth;
-//}
+void Circle::translate(float x, float y) {
+    // Apply translation to x and y coordinate
+    this->x += x;
+    this->y += y;
+}
+
+void Circle::rotate() { } // Rotation of circle has no effect
+
+void Circle::scale(float f) {
+    if (f <= 0)
+        throw std::invalid_argument("Negative scale factor");
+    
+    // Multiply scale factor with radius to scale the circle
+    radius *= f;
+}
+
+bool Circle::contains(const Point& p) const {
+    float dist;
+    
+    // Calculate distance from center of the circle to point p
+    dist = sqrtf(powf(p.getX() - x, 2) + powf(p.getY() - y, 2));
+    
+    // P is inside circle, if dist(p, c) is less than or equal to the radius of the circle
+    return (dist <= radius);
+}
 
 // ================= Scene class ===================
 
 Scene::Scene() {
-//	Stack <shared_ptr<Shape>> dstr;	// data structure
-	dstr = new Stack<shared_ptr<Shape>>;
-	// IMPLEMENT ME
-	for (int i=HEIGHT-1; i>=0; i--) {
-		for (int j=0; j<WIDTH; j++){
-			cout << ' ';
-		}
-		cout << '\n';
-	}
-	drawDepth = 100;
+    // Boolean to indicate, if the scene class has a custom drawing depth
+    hasCustomDepth = false;
+    
+    // drawDepth holds the value, in case if depth is specified by user
+    drawDepth = -1;
 }
 
 void Scene::addObject(std::shared_ptr<Shape> ptr) {
-	// IMPLEMENT ME
-	dstr->push(ptr);
-//	setDrawDepth(ptr->getDepth());
+    // Depth of the object to be added to the scene class
+    int objectDepth = ptr->getDepth();
+    
+    // Check if any object exists with same depth
+    if (objectList.find(objectDepth) != objectList.end()) {
+        // Append new object to the list of existing objects with same depth
+        objectList[objectDepth].push_back(ptr);
+    }
+    else {
+        // Populate the vector with a pointer to a shape object with "objectDepth" depth
+        objectList[objectDepth] = std::vector<std::shared_ptr<Shape>>(1, ptr);
+    }
 }
 
 void Scene::setDrawDepth(int depth) {
-//	// IMPLEMENT ME
-//	if (depth > drawDepth)
-		drawDepth = depth;
+	if (depth < 0)
+        throw std::invalid_argument("Negative depth!");
+    
+    // Trigger the switch to indicate that the user has specified drawing depth
+    hasCustomDepth = true;
+    
+    // Assign the user-specified value to drawDepth
+    drawDepth = depth;
 }
-bool check_if_Point_in_any_object_of_Stack(const Point & p, Stack<shared_ptr<Shape>>* dstr, int d){
-	for (int i = 0; i < dstr->length(); i++) {
-		shared_ptr<Shape> ptr = dstr->returner(i);
-		if (ptr->contains(p) && ptr->getDepth() <= d) {
-			return true;
-		}
-	}
-	return false;
+
+bool shadePoint(const Scene& s, const Point& p) {
+    // Iterate through the pairs of integers and vectors in the map objectList
+    // P is the pair(int, vector<shared_ptr<Shape>>)
+    // listItem is the vector of Shape pointers, which is the second item in the pair
+    
+    for (auto P: s.objectList) {
+        for (auto listItem: P.second) {
+        
+            // If draw depth is specified by the user, and the item's depth exceeds the draw depth, return false
+            if (s.hasCustomDepth && s.drawDepth < listItem->getDepth())
+                    return false;
+        
+            // If draw depth is not specified or the item's depth is lesser than or equal to the draw depth, return true
+            if (listItem->contains(p))
+                return true;
+        }
+    }
+    
+    // If there is no objects in the vector that contains the point 'p' meaning that it is a empty cell, return false
+    return false;
 }
 
 std::ostream& operator<<(std::ostream& out, const Scene& s) {
-	// IMPLEMENT ME
-	for (int i = s.HEIGHT-1; i >= 0; i--) {	// y
-		for (int j = 0; j < s.WIDTH; j++) {	// x
-			Point point(j,i);
-			if (check_if_Point_in_any_object_of_Stack(point, s.dstr, s.drawDepth))// && s.dstr->getTop().getDepth() < s.drawDepth)
-			{
-//				cout << j << i;	// coordinates
-				out << '*';
-			}
-			else
-				out << ' ';
-		}
-		out << '\n';
-	}
+    // Looping points(x, y) from (0, 0) to (59, 19)
+    for (int a {0}; a < s.HEIGHT; a++) {
+        for (int b {0}; b < s.WIDTH; b++) {
+            
+            /* Point object to store current point, where
+                x = (b)
+                y = (height - a - 1) simple workaround to iterate from reverse in an forward loop
+            */
+            Point currentPosition (b, s.HEIGHT - a - 1);
+            
+            // If shadePoint returns true, fill the cell with '*'
+            // Else fill the cell with a whitespace character
+            
+            if (shadePoint(s, currentPosition))
+                out << '*';
+            else
+                out << ' ';
+        }
+        
+        // End current line, equivalent to increment the Y coordinate
+        out << std::endl;
+    }
+    
 	return out;
 }
-
-
-
