@@ -2,207 +2,154 @@
 #define GEOMETRY_H_
 
 #include <iostream>
-#include <cmath>
 #include <memory>
-#include "stack.cpp"
+#include <map>
+#include <vector>
 
-class Point; // forward declaration
+class Point;
 
+
+// Abstract class
 class Shape {
-public:
-	// Default constructor, just to make this release version compilable.
-	// If your implementation is correct this should be removed
-	Shape();
 
-	// Constructor specifying the depth of the object.
-	// If d is negative, throw a std::invalid_argument exception.
+public:
 	Shape(int d);
 
-	// Set depth of object to d. If d is negative, return false and
-	// do not update depth. Otherwise return true
-	bool setDepth(int d);
+	bool setDepth(int d);                            // Set object depth
+	int  getDepth() const;                           // Get object depth
 
-	// Return the depth of object
-	int getDepth() const;
+	virtual int  dim() const = 0;                    // Get object dimension
+	virtual void translate(float x, float y) = 0;    // Translate the object by x and y
+	virtual void rotate() = 0;                       // Rotate the object 90 degrees around its centre
+	virtual void scale(float f) = 0;                 // Scale the object by a factor f relative to its centre
+	virtual bool contains(const Point& p) const = 0; // Check if the object contains p
+    
+	static constexpr double PI = 3.1415926;          // the constant pi
 
-	// Return the dimension of the object (0, 1 or 2)
-	//virtual int dim()=0;
-	virtual int dim()const=0;
-	// Translate the object horizontally by x and vertically by y
-	virtual void translate(float x, float y)=0;
-
-	// Rotate the object 90 degrees around its centre
-	virtual void rotate()=0;
-
-	// Scale the object by a factor f relative to its centre.
-	// If f is zero or negative, throw a std::invalid-argument exception.
-	virtual void scale(float f)=0;
-
-	// Return true if the object contains p and false otherwise.
-	// Depths are ignored for purpose of comparison
-	virtual bool contains(const Point& p)=0;// const;
-
-	// the constant pi
-	static constexpr double PI = 3.1415926;
-	int depth;
-protected:
 private:
-	// add any protected/private member variables you need
+    int objectDepth;                                 // Depth of the object
 };
+
 
 class Point : public Shape {
 
 public:
-	float x;
-	float y;
-	// Constructor. Depth defaults to 0
-	Point();
-	Point(float x, float y);
-	Point(float x, float y, int d);
-	// Return basic information (see assignment page)
+	Point(float x, float y, int d = 0);
+
+    // Getters
 	float getX() const;
 	float getY() const;
-	//int dim() const;
-	void translate(float x, float y);
-//	void translate(float x, float y)
-//	{
-//		this->x += x;
-//		this->y += y;
-////		cout << "x : " << this->x << "y: " << this->y;
-//	}
 
-	void rotate();
-	void scale(float f);
-	bool contains(const Point&p);
-	bool setDepth(int);
-	int getDepth();
-	int dim()const;
+    // Overriding methods
+    int  dim() const override final;
+    void translate(float x, float y) override final;
+    void rotate() override final;
+    void scale(float f) override final;
+    bool contains(const Point& p) const override final;
+
 private:
-	// add any member variables you need
+    // Coordinates of the point
+    float x, y;
 };
+
 
 class LineSegment : public Shape {
 
 public:
-	Point start;
-	Point end;
-	// Constructor.
-	// If the two points have different depths, or have the same x- and
-	// y-coordinate, or if the line is not axis-aligned, throw a
-	// std::invalid_argument exception
 	LineSegment(const Point& p, const Point& q);
 
-	// Return basic information (see assignment page)
+	// Get end-point coordinates
 	float getXmin() const;
 	float getXmax() const;
 	float getYmin() const;
 	float getYmax() const;
-
-	// Return the length of the line segment
-	float length() const;
-//	void translate(float x, float y);
-	void translate(float x, float y){
-		start.translate(x, y);
-		end.translate(x, y);
-	}
-	void rotate();
-	bool contains(const Point&);
-	void scale(float f);
-	int dim()const;
+	
+    // Get length of the line segment
+    float length() const;
+    
+    // Overriding methods
+    int  dim() const override final;
+    void translate(float x, float y) override final;
+    void rotate() override final;
+    void scale(float f) override final;
+    bool contains(const Point& p) const override final;
 
 private:
-	// add any member variables you need
+    // End-points coordinates
+    float x1, y1;
+    float x2, y2;
 };
 
+
+// Abstract class
 class TwoDShape : public Shape {
 
 public:
-	// Default constructor.
-	// Similar comment to Student default constructor applies
-	TwoDShape();
-
-	// Constructor specifying the depth d
 	TwoDShape(int d);
-	virtual void translate(float x, float y)=0;
-	virtual void rotate()=0;
-	virtual void scale(float f)=0;
-//	int dim()const;
 
-	// Return the area of the object
-	virtual float area() const=0;
-
-protected:
-private:
-	// add any protected/private member variables you need
+    // All 2DShapes are 2 dimensioned, So, no further inheritance required.
+	int dim() const override final;
+    
+    // Both rectangle and circle has an area attribute, hence area() declared as virtual to be overriden.
+    virtual float area() const = 0;
 };
+
 
 class Rectangle : public TwoDShape {
 
 public:
-	// Constructor.
-	Rectangle();
-	// If the two points have different depths, or have the same x-
-	// and/or y-coordinate, throw a std::invalid_argument exception
 	Rectangle(const Point& p, const Point& q);
 
-	// Return basic information (see assignment page)
+	// Get corner coordinates
 	float getXmin() const;
 	float getYmin() const;
 	float getXmax() const;
 	float getYmax() const;
-	int getDepth() const;
 
-//	void translate(float x, float y);
-	void translate(float x, float y){
-		p1.translate(x, y);
-		p2.translate(x, y);
-	}
-	void rotate();
-	void scale(float f);
-	bool contains(const Point&);
-	float area()const;
-	int dim()const;
-	
+    // Overriding methods
+    void  translate(float x, float y) override final;
+    void  rotate() override final;
+    void  scale(float f) override final;
+    bool  contains(const Point& p) const override final;
+    float area() const override final;
+
 private:
-	Point p1;
-	Point p2;
-	// add any member variables you need
+    // Coordinates of the four vertices of a rectangle.
+    float x1, y1, x2, y2, x3, y3, x4, y4;
+
+    // Array of pointers pointing to the coordiantes, for easier iteration to perform operations
+    float *xCoor[4] = { &x1, &x2, &x3, &x4 };
+    float *yCoor[4] = { &y1, &y2, &y3, &y4 };
 };
 
-class Circle : public TwoDShape {
 
+class Circle : public TwoDShape {
 public:
-	Circle();
-	// Constructor.
-	// If r is zero or negative, throw a std::invalid-argument exception.
 	Circle(const Point& c, float r);
 
-	// Return basic information (see assignment page)
+	// Get center point of the circle
 	float getX() const;
 	float getY() const;
-	float getR() const;
-//	void translate(float x, float y);
-	void translate(float x, float y){
-		center.translate(x, y);
-	}
-	void rotate();
-	void scale(float f);
-	bool contains(const Point&p);
-	float area()const;
-	int dim()const;	
+    
+	// Get radius of the circle
+    float getR() const;
+
+    // Overriding methods
+    void  translate(float x, float y) override final;
+    void  rotate() override final;
+    void  scale(float f) override final;
+    bool  contains(const Point& p) const override final;
+	float area() const override final;
 
 private:
-	// add any member variables you need
-	Point center;
-	float radius;
-	const float PI=3.1415;
+    // Center coordinate and radius of the circle
+    float x, y, radius;
 };
 
 
 class Scene {
-//	Stack <shared_ptr<Shape>> dstr;
+
 public:
-	// Constructor
 	Scene();
 
 	// Add the pointer to the collection of pointers stored
@@ -215,156 +162,23 @@ public:
 	static constexpr int WIDTH = 60;
 	static constexpr int HEIGHT = 20;
 
-	//bool check_if_Point_in_any_object_of_Stack(const Point & p);
 private:
-	// add any member variables you need
-	Stack <std::shared_ptr<Shape>> *dstr;
-	int drawDepth;
-	// Draw objects as specified in the assignment page
+    // Once turned on, objects with depths no greater than the drawDepth wil be drawn
+    bool hasCustomDepth;
+
+    // Specifies the master drawing depth
+    int  drawDepth;
+
+    // Used map to group objects associated with same depth
+    // Mapped int (depth) to list of pointers to Shape object (vector<pointers>) for constant time retrieval O(1)
+    std::map< int, std::vector<std::shared_ptr<Shape>> > objectList;
+    
+
+// Redirect the coordinate plane to output stream object "out"
 friend std::ostream& operator<<(std::ostream& out, const Scene& s);
+
+// Checks if a cell in the plane should be shaded or marked empty
+friend bool shadePoint(const Scene& s, const Point& p);
 };
 
-//template <typename T>
-//class Node
-//{
-//private:
-//	T data;
-//	Node<T>* next;
-//
-//public:
-//
-//	Node();
-////	{
-////		data = 0;
-////		next = NULL;
-////	}
-//
-//	Node(T value);
-////	{
-////		data = value;
-////		next = NULL;
-////	}
-//
-//	Node <T>* getNext();
-////	{
-////		return next;
-////	}
-//
-//	void setnext(Node<T>* ptr);
-////	{
-////		next = ptr;
-////	}
-//
-//	T getData();
-////	{
-////		return data;
-////	}
-//
-//	void setData(T value);
-////	{
-////		data = value;
-////	}
-//
-//};
-//
-//
-//template <typename T>
-//class Stack
-//{
-//	Node<T>* top;
-//
-//public:
-//	Stack();
-////	{
-////		top = NULL;
-////	}
-//
-//	Stack(Node<T>* ptr);
-////	{
-////		top = ptr;
-////	}
-//
-//	Node <T>* getTop();
-////	{
-////		return top->getData();
-////	}
-//
-//	void setTop(Node<T>* ptr);
-////	{
-////		top = ptr;
-////	}
-//
-//	bool isEmpty();
-////	{
-////		if (top == NULL)
-////		{
-////			return true;
-////		}
-////		else
-////			return false;
-////	}
-//
-//	void push(T value);
-////	{
-////		Node<T>* temp = new Node <T>(value);
-////
-////		if (top == NULL)
-////		{
-////			top = temp;
-////		}
-////		else
-////		{
-////			temp->setnext(top);
-////			top = temp;
-////		}
-////
-////	}
-//
-//	int length();
-////	{
-////		Node<T>* current = top;
-////		int count = 0;
-////		while (current != NULL) {
-////			current = current->getNext();
-////			count++;
-////		}
-////		return count * 1;
-////	}
-//	bool pop();
-////	{
-////
-////		if (top == NULL)
-////		{
-////			return false;
-////		}
-////		else
-////		{
-////			Node<T>* temp = top;
-////			top = top->getNext();
-////			delete temp;
-////
-////			return true;
-////		}
-////	}
-//	T returner(int i);
-//// {
-////		int count = 0;
-////		Node<T>* current = top;
-////		while (count < i) {
-////			current = current->getNext();
-////			count++;
-////		}
-////		return current->getData();
-////	}
-//	T peek();
-////	{
-////		if (isEmpty())
-////			return NULL;
-////		else
-////			return top->getData();
-////	}
-//};
-
-
-#endif /* GEOMETRY_H_ */	
-
+#endif /* GEOMETRY_H_ */
