@@ -4,11 +4,6 @@
 #include "Geometry.h"
 // #include "geometry.cpp"
 
-/*
-	If there is any linker error at all, please uncomment the include directive for geometry.cpp.
-	I know it's a bad practice to do so, but a quick workaround
-*/
-
 
 // ============ Utility functions =================
 
@@ -456,11 +451,10 @@ void Scene::addObject(std::shared_ptr<Shape> ptr) {
     
     // Check if any object exists with same depth
     if (objectList.find(objectDepth) != objectList.end()) {
-        // Append new object to the list of existing objects with same depth
+       
         objectList[objectDepth].push_back(ptr);
     }
     else {
-        // Populate the vector with a pointer to a shape object with "objectDepth" depth
         objectList[objectDepth] = std::vector<std::shared_ptr<Shape>>(1, ptr);
     }
 }
@@ -469,56 +463,49 @@ void Scene::setDrawDepth(int depth) {
 	if (depth < 0)
         throw std::invalid_argument("Negative depth!");
     
-    // Trigger the switch to indicate that the user has specified drawing depth
+    
     hasCustomDepth = true;
     
-    // Assign the user-specified value to drawDepth
+   
     drawDepth = depth;
 }
 
 bool shadePoint(const Scene& s, const Point& p) {
-    // Iterate through the pairs of integers and vectors in the map objectList
-    // P is the pair(int, vector<shared_ptr<Shape>>)
-    // listItem is the vector of Shape pointers, which is the second item in the pair
+    
     
     for (auto P: s.objectList) {
         for (auto listItem: P.second) {
         
-            // If draw depth is specified by the user, and the item's depth exceeds the draw depth, return false
+            
             if (s.hasCustomDepth && s.drawDepth < listItem->getDepth())
                     return false;
         
-            // If draw depth is not specified or the item's depth is lesser than or equal to the draw depth, return true
+           
             if (listItem->contains(p))
                 return true;
         }
     }
     
-    // If there is no objects in the vector that contains the point 'p' meaning that it is a empty cell, return false
+   
     return false;
 }
 
 std::ostream& operator<<(std::ostream& out, const Scene& s) {
-    // Looping points(x, y) from (0, 0) to (59, 19)
+   
     for (int a {0}; a < s.HEIGHT; a++) {
         for (int b {0}; b < s.WIDTH; b++) {
             
-            /* Point object to store current point, where
-                x = (b)
-                y = (height - a - 1) simple workaround to iterate from reverse in an forward loop
-            */
+          
             Point currentPosition (b, s.HEIGHT - a - 1);
             
-            // If shadePoint returns true, fill the cell with '*'
-            // Else fill the cell with a whitespace character
-            
+ 
             if (shadePoint(s, currentPosition))
                 out << '*';
             else
                 out << ' ';
         }
         
-        // End current line, equivalent to increment the Y coordinate
+       
         out << std::endl;
     }
     
