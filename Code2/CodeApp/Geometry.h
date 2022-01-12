@@ -205,7 +205,7 @@ private:
 	vector<shared_ptr<Shape>> V;
 	int Depth;
 
-	// Draw objects as specified in the assignment page
+	// Draw objects as specified i the assignment page
 friend std::ostream& operator<<(std::ostream& out, const Scene& s);
 };
 

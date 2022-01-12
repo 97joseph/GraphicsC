@@ -12,7 +12,7 @@ class Shape {
 public:
 
 	// Constructor specifying the depth of the object.
-	// If d is negative, throw a std::invalid_argument exception.
+	// If d is negative, throw a std::invalid_argument exception
 	Shape(int d);
 
 	// Set depth of object to d. If d is negative, return false and

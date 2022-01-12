@@ -52,7 +52,7 @@ public:
 
 private:
 
-	// three overloaded versions
+	// three overloaded version
 	void errorOut_(const std::string& errMsg, unsigned int errBit);
 	void errorOut_(const std::string& errMsg, const std::string& errRes, unsigned int errBit);
 	void errorOut_(const std::string& errMsg, int errRes, unsigned int errBit);

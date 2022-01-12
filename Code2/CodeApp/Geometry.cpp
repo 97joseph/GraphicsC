@@ -167,7 +167,7 @@ TwoDShape::TwoDShape(int d) {
 	dimension=2;
 }
 
-// ============== Rectangle class ================
+// ============== Rectangle class ===============
 
 Rectangle::Rectangle(const Point& p, const Point& q) {
 	if(p.getDepth()!=q.getDepth())

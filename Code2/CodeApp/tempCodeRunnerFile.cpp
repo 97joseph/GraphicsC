@@ -17,7 +17,6 @@ auto pp1 = make_shared<Point>(0,0);
 	cout << s;
 
 	cout << endl;
-
 	rp->rotate();
 	cp->translate(0,-5);
 	cout << s;

@@ -4,7 +4,7 @@
 CXX     = g++
 
 # Specify options to pass to the compiler. Here it sets the optimisation
-# level, outputs debugging info for gdb, and C++ version to use.
+# level, outputs debugging info for gdb, and C++ version to use
 CXXFLAGS = -O0 -g3 -std=c++14
 
 All: all

@@ -34,8 +34,7 @@ int main(int argc, char* argv[]) {
 		case 'x': { GeometryTester t; t.testx(); } break;
 		case 'y': { GeometryTester t; t.testy(); } break;
 		case 'z': { GeometryTester t; t.testz(); } break;
-		default: { cout << "Options are a -- y." << endl; } break;
-	       	}
+		default: { cout << "Options are a -- y." << endl; } break;	       	}
 	}
 	return 0;
 }

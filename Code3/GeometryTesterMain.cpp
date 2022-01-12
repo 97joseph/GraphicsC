@@ -5,7 +5,7 @@ using std::cout;
 using std::endl;
 
 int main(int argc, char* argv[]) {
-
+//ret
 	for(int i=1; i<argc; i++) {
 		switch (argv[i][0]) {
 		case 'a': { GeometryTester t; t.testa(); } break;

@@ -11,7 +11,7 @@ int main() {
 	LineSegment l(p1, p2);
 	cout << l.getXmin() << " " << l.getXmax() << endl;
 	cout << l.length() << endl;
-
+//ret
 	p2.translate(0,2);
 	Rectangle r(p1,p2);
 	r.rotate();

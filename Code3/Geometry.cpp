@@ -29,7 +29,7 @@ int Shape::dim() const {
 	return dimension_;
 }
 
-// =============== Point class ================
+// =============== Point class ===============
 
 Point::Point(float x, float y, int d) : Shape(d) {
 	x_ = x;
