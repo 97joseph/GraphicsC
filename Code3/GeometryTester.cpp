@@ -101,6 +101,7 @@ void GeometryTester::testd() {
 	Point p1(1,2);
 	Point p2(5,2);
 	LineSegment l1(p1,p2);
+
 	if (l1.getXmin() != 1) errorOut_("l1 Xmin reported as ",l1.getXmin(),1);
 	if (l1.getXmax() != 5) errorOut_("l1 Xmax reported as ",l1.getXmax(),1);
 	if (l1.getYmin() != 2) errorOut_("l1 Ymin reported as ",l1.getYmin(),1);
