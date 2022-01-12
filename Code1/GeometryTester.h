@@ -18,7 +18,7 @@ public:
     void teste();
     void testf();
 
-    // rect
+    // rec
     void testg();
     void testh();
     void testi();

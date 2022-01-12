@@ -13,7 +13,7 @@ GeometryTester::GeometryTester() : error_(false), funcname_("") {
 
 }
 
-// Point ctor, basics
+// Point ctor, basic
 void GeometryTester::testa() {
     funcname_ = "GeometryTester::testa";
 

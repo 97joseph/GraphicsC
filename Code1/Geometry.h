@@ -10,7 +10,7 @@ class Shape {
 
 public:
     // Default constructor, just to make this release version compilable.
-    // If your implementation is correct this should be removed
+    // If your implementation is correct this should be remove
     Shape();
 
     // Constructor specifying the depth of the object.

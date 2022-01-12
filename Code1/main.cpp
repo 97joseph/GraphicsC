@@ -18,7 +18,7 @@ int main() {
 //    cout << r.getYmin() << " " << r.getYmax() << endl;
 //    cout << r.area() << endl;
 //
-//    Point p3(1,2,3);
+//    Point p3(1,2,3)
 //    Circle c(p3, 2);
 //    cout << c.area() << endl;
 //    c.scale(10);
